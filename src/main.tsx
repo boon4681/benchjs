@@ -1,11 +1,16 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import './index.css'
+import { loadWASM } from 'onigasm' 
 import App from './App'
+import './assets/css/tailwind.pcss'
+import './assets/css/index.scss'
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-)
+(async () => {
+  await loadWASM('/onigasm.wasm');
+  ReactDOM.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+    document.querySelector('main')
+  )
+})();
