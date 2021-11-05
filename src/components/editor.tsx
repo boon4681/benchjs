@@ -2,12 +2,14 @@ import 'monaco-editor/esm/vs/basic-languages/css/css.contribution'
 import 'monaco-editor/esm/vs/basic-languages/xml/xml.contribution'
 import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution'
 
-import * as monaco from 'monaco-editor'
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
+
+import MonacoEditor from 'react-monaco-editor';
+import * as monaco from 'monaco-editor'
 import { v4 as uuidv4 } from 'uuid';
 import React, { useRef, useState } from 'react'
 import dark_plus from '../assets/themes/dark_plus.json'
@@ -50,7 +52,14 @@ window.MonacoEnvironment = {
     }
 }
 
-export class Editor extends React.Component<{block:string, index: number, callback: (a:{monaco:monaco.editor.IStandaloneCodeEditor,editor:HTMLDivElement,box:HTMLDivElement,id:string,input:HTMLInputElement}) => void }> {
+export class Editor extends React.Component<{
+    block: string,
+    index: number,
+    value?: string
+    onEditorDidMount: (a: { monaco: monaco.editor.IStandaloneCodeEditor,editor:HTMLElement,block:HTMLElement }) => void,
+    onNameChange: (name: string) => void,
+    onValueChange: (value: string) => void
+}> {
     private ele?: HTMLDivElement;
     private ele2?: HTMLDivElement;
     private input?: HTMLInputElement
@@ -75,44 +84,32 @@ export class Editor extends React.Component<{block:string, index: number, callba
 
         await wireTmGrammars(monaco, registry, grammars, this.editor);
     };
-    componentDidMount() {
-        if (this.ele && this.input && this.ele2) {
-            this.editor = monaco.editor.create((this.ele as HTMLElement), {
-                value: "",
-                language: "typescript",
-                lineNumbers: "on",
-                roundedSelection: false,
-                scrollBeyondLastLine: false,
-                readOnly: false,
-                theme: "vsc-dark-plus",
-            })
-            this.ele2?.classList.add('h-80')
-            this.ele.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            this.props.callback({monaco:this.editor,editor:this.ele,id:this.id,box:this.ele2,input: this.input})
-            this.liftOff(monaco)
-        }
+    componentDidMount = () =>{
+        if(this.ele && this.editor && this.ele2)
+        this.props.onEditorDidMount({monaco:this.editor,editor:this.ele,block:this.ele2})
+        this.ele2?.classList.add('h-80')
+        this.ele?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-    componentWillUnmount() {
-        if (this.editor) {
-            this.editor.dispose();
-            const model = this.editor.getModel();
-            if (model) {
-                model.dispose();
-            }
-        }
-    }
+    onEditorDidMount = (editor: any, monaco: any) => {
+        this.editor = editor
+        this.liftOff(monaco)
+    };
     render() {
         return (
             <div data-block={`${this.id}`} className="w-full my-4">
-                <input ref={this.assignInput} defaultValue={`code-block-${this.props.index}`} type="text" className="outline-none border-b border-dashed bg-transparent border-gray-400" />
+                <input ref={this.assignInput} onChange={(e) => {
+                    this.props.onNameChange(e.target.value)
+                }} defaultValue={`code-block-${this.props.index}`} type="text" className="outline-none border-b border-dashed bg-transparent border-gray-400" />
                 <div className="flex w-full">
                     <div className="flex flex-col w-7" style={{ backgroundColor: '#252526' }}>
                         <div className="p-1 py-1.5 hover:bg-gray-600 hover:opacity-60 hover:text-white transition duration-100">
                             <IoIosArrowUp className='ml-0.5 transform rotate-180 transition-transform duration-150' />
                         </div>
                     </div>
-                    <div ref={this.assign2} className='overflow-hidden h-0 w-full transition-all duration-500'>
-                        <div ref={this.assign} className='h-80' style={{ width: '100%', maxWidth: '600px' }}></div>
+                    <div ref={this.assign2} className='overflow-hidden h-0 w-full transition-all duration-1000'>
+                        <div ref={this.assign} className='h-80 w-full lg:max-w-lg'>
+                            <MonacoEditor value={this.props.value} onChange={this.props.onValueChange} editorDidMount={this.onEditorDidMount} theme={'vsc-dark-plus'} />
+                        </div>
                     </div>
                 </div>
             </div>
