@@ -3,22 +3,25 @@ import { HiPlus } from 'react-icons/hi'
 import { v4 as uuidv4 } from 'uuid';
 import * as monaco from 'monaco-editor'
 import { Editor } from '../components/editor';
+import { Kofi_Panel } from '../components/Donate';
 import { BiMinus } from "react-icons/bi";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../assets/css/custom.toast.scss'
-import * as bench from 'benchmark'
-
+// import Benchmark from 'benchmark'
+// @ts-ignore
+let bench = Benchmark
 export default () => {
-    const [block, setBlock] = useState(new Map<string, { id: string, monaco: monaco.editor.IStandaloneCodeEditor, editor:HTMLElement,block:HTMLElement,name?:string,value?:string}>());
+    const [block, setBlock] = useState(new Map<string, { id: string, monaco: monaco.editor.IStandaloneCodeEditor, editor: HTMLElement, block: HTMLElement, name: string, value: string, bench?: { text: string, hz: number, rme: number, sample: number } }>());
 
     const [ids, setIds] = useState<string[]>(['1']);
-
+    const [donate, setDonate] = useState(false)
     const [onRemove, setOnRemove] = useState(false)
     const [onAdding, setOnAdding] = useState(false)
     const [mPos, setmPos] = useState(0)
     const [selected, setSelected] = useState('')
     const remove_btn = useRef(document.createElement('div'))
+    const add_btn = useRef(document.createElement('div'))
     const calc_pos_remove_btn = (mPos: number) => {
         const keys = [...block.keys()]
         const keyo = block.get(keys[0])
@@ -39,7 +42,6 @@ export default () => {
             if (!mo) return
             remove_btn.current.style.top = `${mo.top + mo.height / 2 - 40}px`
             remove_btn.current.style.left = `${mo.x + mo.width}px`
-            console.log(selected)
             setSelected(eSave[0])
         }
     }
@@ -62,15 +64,15 @@ export default () => {
                 setOnRemove(true)
                 x.block.classList.remove('h-80')
                 setTimeout(() => {
-                    const i = ids.findIndex(a=>a==x.id)
-                    if(i>-1){
-                        ids.splice(i,1)
+                    const i = ids.findIndex(a => a == x.id)
+                    if (i > -1) {
+                        ids.splice(i, 1)
                         block.delete(x.id)
-                        calc_pos_remove_btn(mPos)
                         setIds(ids)
                         setBlock(block)
                         setOnRemove(false)
                     }
+                    calc_pos_remove_btn(mPos)
                 }, 500)
             }
         } else {
@@ -102,6 +104,11 @@ export default () => {
     return (
         <>
             <div className="relative flex box-border mx-auto flex-col min-h-screen">
+                <Kofi_Panel
+                    status={donate}
+                    close={() => {
+                        setDonate(false)
+                    }} />
                 <main>
                     <nav className="relative w-full max-w-7xl mx-auto box-border">
                         <nav className="flex justify-between py-7 px-3 select-none">
@@ -112,7 +119,9 @@ export default () => {
                             </a>
                             <div className="flex items-center h-9 w-auto">
                                 <div className="px-4">
-                                    <button className="button is-link">Donate</button>
+                                    <button className="button is-link" onClick={() => {
+                                        setDonate(true)
+                                    }}>Donate</button>
                                 </div>
                             </div>
                         </nav>
@@ -135,33 +144,93 @@ export default () => {
                                     />
                                 </div>
                             </div>
+                            <button className="button is-dark" onClick={() => {
+                                [...block.values()].forEach(a => {
+                                    const x = new bench({
+                                        'name': a.name,
+                                        'fn': a.value,
+                                        'onCycle': (e: any) => {
+                                            block.set(a.id, {
+                                                ...a,
+                                                bench: {
+                                                    text: String(e.target),
+                                                    hz: e.target.hz,
+                                                    sample: e.target.stats.sample.length,
+                                                    rme: e.target.stats.rme
+                                                }
+                                            })
+                                            setBlock(block)
+                                            // console.log(e.target)
+                                            // console.log(String(e.target))
+                                        },
+                                        'onComplete': (e: any) => {
+                                            console.log(e)
+                                        },
+                                        'onError': (e: any) => {
+                                            toast.error(`🦄 error ${a.name}`, {
+                                                position: "top-right",
+                                                theme: 'dark',
+                                                hideProgressBar: false,
+                                                closeOnClick: true,
+                                                pauseOnHover: true,
+                                                draggable: true,
+                                                progress: undefined,
+                                            });
+                                        }
+                                    })
+                                    x.run()
+                                })
+                            }}>▶</button>
                             <div className="lg:flex w-full">
-                                <div className="min-h-40 w-full relative mb-20 xl:mb-0 lg:max-w-lg">
-                                    <div className="w-12 z-20 h-12 p-3 add cursor-pointer absolute -bottom-16 left-0" onClick={add}>
+                                <div className="min-h-40 w-full relative mb-20 lg:mb-0 lg:max-w-lg">
+                                    <div ref={add_btn} className="w-12 z-20 h-12 p-3 add cursor-pointer absolute -bottom-16 left-0" onClick={add}>
                                         <HiPlus className="w-full h-full text-white" />
                                     </div>
                                     <div ref={remove_btn} className="ml-3 z-20 w-10 h-10 p-3 border-2 opacity-50 hover:opacity-75 rounded-full cursor-pointer fixed top-0 right-0 transition-all duration-200" onClick={remove}>
                                         <BiMinus className="w-full h-full text-white" />
                                     </div>
-                                    {ids.map((e,i) => {
+                                    {ids.map((e, i) => {
                                         return (
-                                            <Editor key={e} block={e} index={i}
+                                            <Editor key={e} block={e} index={i} value='let o = 0;'
                                                 onEditorDidMount={(a) => {
-                                                    block.set(e,{id:e,...a})
+                                                    block.set(e, { id: e, ...a, name: `code-block-${i}`, value: 'let o = 0;' })
+                                                    setBlock(block)
+                                                    setTimeout(() => {
+                                                        add_btn.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                                    }, 300);
                                                 }}
                                                 onNameChange={(a) => {
                                                     const b = block.get(e)
-                                                    if(b) block.set(e,{...b,name:a})
+                                                    if (b) {
+                                                        block.set(e, { ...b, name: a })
+                                                        setBlock(block)
+                                                    }
                                                 }}
                                                 onValueChange={(a) => {
                                                     const b = block.get(e)
-                                                    if(b) block.set(e,{...b,value:a})
+                                                    if (b) {
+                                                        block.set(e, { ...b, value: a })
+                                                        setBlock(block)
+                                                    }
                                                 }}
                                             />
                                         )
                                     })}
                                 </div>
-                                <div className="lg:ml-16 rounded mt-10 mb-24 w-full p-5" style={{ background: '#1e1e1e' }}>
+                                <div className="lg:ml-16 rounded mt-10 mb-4 w-full p-5" style={{ background: '#1e1e1e' }}>
+                                    <div>
+                                        {[...block.values()].map(a => {
+                                            return (
+                                                <div key={a.id + "1"}>
+                                                    <div>{`${a.name}`}</div>
+                                                    <div className="w-full relative h-6 my-3 rounded overflow-hidden" style={{ background: '#424d58' }}>
+                                                        <div className="absolute w-full text-center">{a.bench?.text}</div>
+                                                        <div className="h-full" style={{ background: '#4c9aeb', width: `${10}%` }}></div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -169,14 +238,14 @@ export default () => {
                 </main>
             </div>
             <footer className='mt-56 py-10 text-center' style={{ backgroundColor: '#1b1b1c' }}>
-                <div>© {(() => {
+                <div>{(() => {
                     const y = new Date().getUTCFullYear().toString()
                     if (y == '2021') {
                         return y
                     } else {
                         return `2021-${y}`
                     }
-                })()} benchjs.boon4681.com</div>
+                })()} boon4681.com</div>
             </footer>
         </>
     )

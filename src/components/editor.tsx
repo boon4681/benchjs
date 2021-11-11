@@ -88,7 +88,6 @@ export class Editor extends React.Component<{
         if(this.ele && this.editor && this.ele2)
         this.props.onEditorDidMount({monaco:this.editor,editor:this.ele,block:this.ele2})
         this.ele2?.classList.add('h-80')
-        this.ele?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
     onEditorDidMount = (editor: any, monaco: any) => {
         this.editor = editor
@@ -96,19 +95,22 @@ export class Editor extends React.Component<{
     };
     render() {
         return (
-            <div data-block={`${this.id}`} className="w-full my-4">
+            <div data-block={`${this.id}`} className="w-full my-4 select-none">
                 <input ref={this.assignInput} onChange={(e) => {
                     this.props.onNameChange(e.target.value)
                 }} defaultValue={`code-block-${this.props.index}`} type="text" className="outline-none border-b border-dashed bg-transparent border-gray-400" />
                 <div className="flex w-full">
                     <div className="flex flex-col w-7" style={{ backgroundColor: '#252526' }}>
-                        <div className="p-1 py-1.5 hover:bg-gray-600 hover:opacity-60 hover:text-white transition duration-100">
-                            <IoIosArrowUp className='ml-0.5 transform rotate-180 transition-transform duration-150' />
-                        </div>
+                        {/* <div onClick={(e)=>{
+                            e.currentTarget.children[0].classList.toggle('rotate-180')
+                            this.ele2?.classList.toggle('h-80')
+                        }} className="p-1 py-1.5 hover:bg-gray-600 hover:opacity-60 hover:text-white transition duration-100">
+                            <IoIosArrowUp className='ml-0.5 transform rotate-180 transition-transform duration-150 pointer-events-none' />
+                        </div> */}
                     </div>
                     <div ref={this.assign2} className='overflow-hidden h-0 w-full transition-all duration-1000'>
                         <div ref={this.assign} className='h-80 w-full lg:max-w-lg'>
-                            <MonacoEditor value={this.props.value} onChange={this.props.onValueChange} editorDidMount={this.onEditorDidMount} theme={'vsc-dark-plus'} />
+                            <MonacoEditor language={'javascript'} value={this.props.value} onChange={this.props.onValueChange} editorDidMount={this.onEditorDidMount} theme={'vsc-dark-plus'} />
                         </div>
                     </div>
                 </div>
