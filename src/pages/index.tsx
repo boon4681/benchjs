@@ -55,6 +55,9 @@ export default () => {
     }
     const add = () => {
         ids.push(uuidv4())
+        setTimeout(() => {
+            add_btn.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 300);
     };
     const remove = () => {
         if (onRemove) return;
@@ -192,9 +195,6 @@ export default () => {
                                                 onEditorDidMount={(a) => {
                                                     block.set(e, { id: e, ...a, name: `code-block-${i}`, value: 'let o = 0;' })
                                                     setBlock(block)
-                                                    setTimeout(() => {
-                                                        add_btn.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                                                    }, 300);
                                                 }}
                                                 onNameChange={(a) => {
                                                     const b = block.get(e)
