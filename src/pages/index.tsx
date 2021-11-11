@@ -14,7 +14,7 @@ let bench = Benchmark
 export default () => {
     const [block, setBlock] = useState(new Map<string, { id: string, monaco: monaco.editor.IStandaloneCodeEditor, editor: HTMLElement, block: HTMLElement, name: string, value: string, bench?: { text: string, hz: number, rme: number, sample: number } }>());
 
-    const [ids, setIds] = useState<string[]>(['1']);
+    const [ids, setIds] = useState<string[]>(['1','2']);
     const [donate, setDonate] = useState(false)
     const [onRemove, setOnRemove] = useState(false)
     const [onAdding, setOnAdding] = useState(false)
@@ -98,9 +98,6 @@ export default () => {
             a.monaco.layout()
         })
     }
-    useEffect(() => {
-        add()
-    }, [])
     return (
         <>
             <div className="relative flex box-border mx-auto flex-col min-h-screen">
@@ -217,7 +214,7 @@ export default () => {
                                         )
                                     })}
                                 </div>
-                                <div className="lg:ml-16 rounded mt-10 mb-4 w-full p-5" style={{ background: '#1e1e1e' }}>
+                                <div className="lg:ml-16 rounded mt-10 mb-4 w-full p-5 select-none" style={{ background: '#1e1e1e' }}>
                                     <div>
                                         {[...block.values()].map(a => {
                                             return (
