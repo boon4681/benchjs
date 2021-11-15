@@ -10,7 +10,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: rgb(155, 157, 159);
   min-height: 100vh;
-  background-color: #0e0e10;
+  background-color: #1b1b20;
 }
 
 .button {
@@ -36,14 +36,28 @@ body {
       background: #2c7cb6;
     }
   }
+
+  &.is-border-dark {
+    border: 2px solid #393a3b;
+    color: rgb(221, 221, 221);
+    &:hover {
+      color: white;
+      border: 2px solid #494b4d;
+    }
+  }
+
+  &.no-bg {
+    background-color: transparent !important;
+  }
 }
 
-.add{
+.add {
   background: #33aaff;
   border-radius: 50%;
   transition: 0.25s;
 }
-.add:hover{
+
+.add:hover {
   background: #2c7cb6;
 }
 

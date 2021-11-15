@@ -1,21 +1,22 @@
-import 'monaco-editor/esm/vs/basic-languages/css/css.contribution'
-import 'monaco-editor/esm/vs/basic-languages/xml/xml.contribution'
-import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution'
+import React, { useRef, useState } from 'react'
 
+import { editor, languages } from 'monaco-editor'
+import * as monaco from 'monaco-editor'
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
-import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
-import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
-import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 
-import MonacoEditor from 'react-monaco-editor';
-import * as monaco from 'monaco-editor'
-import { v4 as uuidv4 } from 'uuid';
-import React, { useRef, useState } from 'react'
 import dark_plus from '../assets/themes/dark_plus.json'
+import onedark from '../assets/themes/onedark.json'
+
 import { Registry } from 'monaco-textmate'
 import { wireTmGrammars } from 'monaco-editor-textmate';
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
+
+import { v4 as uuidv4 } from 'uuid';
+
+import { BiTrash } from 'react-icons/bi'
+
+import { ToastContainer, toast } from 'react-toastify';
+///////////////////
 
 const registry = new Registry({
     getGrammarDefinition: async (scopeName) => {
@@ -38,43 +39,57 @@ const registry = new Registry({
     }
 })
 
-monaco.editor.defineTheme('vsc-dark-plus', { ...dark_plus, base: "vs-dark" });
+// define themes //
+editor.defineTheme('vsc-dark-plus', { ...dark_plus, base: "vs-dark" });
+editor.defineTheme('onedark', { ...onedark, base: "vs-dark" });
+///////////////////
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// assign languege worker //
 // @ts-ignore
 window.MonacoEnvironment = {
     getWorker(_: string, label: string) {
         if (label === 'typescript' || label === 'javascript') return new TsWorker()
-        if (label === 'json') return new JsonWorker()
-        if (label === 'css') return new CssWorker()
-        if (label === 'html') return new HtmlWorker()
         return new EditorWorker()
     }
 }
-
-export class Editor extends React.Component<{
-    block: string,
-    index: number,
-    value?: string
-    onEditorDidMount: (a: { monaco: monaco.editor.IStandaloneCodeEditor,editor:HTMLElement,block:HTMLElement }) => void,
-    onNameChange: (name: string) => void,
-    onValueChange: (value: string) => void
-}> {
-    private ele?: HTMLDivElement;
-    private ele2?: HTMLDivElement;
-    private input?: HTMLInputElement
-    private id: string = this.props.block
-    editor?: monaco.editor.IStandaloneCodeEditor;
-    assign = (component: HTMLDivElement) => {
-        this.ele = component;
-    };
-    assign2 = (component: HTMLDivElement) => {
-        this.ele2 = component;
-    };
-    assignInput = (component: HTMLInputElement) => {
-        this.input = component;
+///////////////////////////
+type iblock = { id: string }
+type pEditor = {
+    block: iblock,
+    remove: (id: string, block: Editor) => void
+}
+type sEditor = {
+    name: string,
+    isOnEditName: boolean
+}
+export class Editor extends React.Component<pEditor, sEditor>{
+    private ele?: HTMLDivElement
+    private block?: HTMLDivElement
+    constructor(props: pEditor) {
+        super(props)
+        this.state = {
+            name: "Test",
+            isOnEditName: false
+        }
     }
-    liftOff = async (monaco: any) => {
+    private assign = (e: HTMLDivElement) => {
+        this.ele = e
+    }
+    private assignblock = (e: HTMLDivElement) => {
+        this.block = e
+    }
+    readonly get_block = () => {
+        return this.block
+    }
+    componentDidMount() {
+        if (this.ele && this.block) {
+            const monaco = editor.create(this.ele as HTMLElement, { theme: 'onedark', automaticLayout: true, language: "javascript" })
+            this.liftOff(monaco)
+            this.block.classList.add("h-80")
+            this.block.classList.remove("opacity-0")
+        }
+    }
+    liftOff = async (editor: any) => {
         const grammars = new Map();
         grammars.set('typescript', 'source.ts');
         grammars.set('javascript', 'source.js');
@@ -82,39 +97,89 @@ export class Editor extends React.Component<{
         monaco.languages.register({ id: 'typescript' });
         monaco.languages.register({ id: 'javascript' });
 
-        await wireTmGrammars(monaco, registry, grammars, this.editor);
+        await wireTmGrammars(monaco, registry, grammars, editor);
     };
-    componentDidMount = () =>{
-        if(this.ele && this.editor && this.ele2)
-        this.props.onEditorDidMount({monaco:this.editor,editor:this.ele,block:this.ele2})
-        this.ele2?.classList.add('h-80')
+    remove = () => {
+        this.props.remove(this.props.block.id, this)
     }
-    onEditorDidMount = (editor: any, monaco: any) => {
-        this.editor = editor
-        this.liftOff(monaco)
-    };
     render() {
         return (
-            <div data-block={`${this.id}`} className="w-full my-4 select-none">
-                <input ref={this.assignInput} onChange={(e) => {
-                    this.props.onNameChange(e.target.value)
-                }} defaultValue={`code-block-${this.props.index}`} type="text" className="outline-none border-b border-dashed bg-transparent border-gray-400" />
-                <div className="flex w-full">
-                    <div className="flex flex-col w-7" style={{ backgroundColor: '#252526' }}>
-                        {/* <div onClick={(e)=>{
-                            e.currentTarget.children[0].classList.toggle('rotate-180')
-                            this.ele2?.classList.toggle('h-80')
-                        }} className="p-1 py-1.5 hover:bg-gray-600 hover:opacity-60 hover:text-white transition duration-100">
-                            <IoIosArrowUp className='ml-0.5 transform rotate-180 transition-transform duration-150 pointer-events-none' />
-                        </div> */}
-                    </div>
-                    <div ref={this.assign2} className='overflow-hidden h-0 w-full transition-all duration-1000'>
-                        <div ref={this.assign} className='h-80 w-full lg:max-w-lg'>
-                            <MonacoEditor language={'javascript'} value={this.props.value} onChange={this.props.onValueChange} editorDidMount={this.onEditorDidMount} theme={'vsc-dark-plus'} />
-                        </div>
+            <div ref={this.assignblock} className='overflow-hidden h-0 w-full opacity-0 transition-all duration-1000 rounded my-4 shadow-2xl'>
+                <div className="py-2 px-4 text-md text-gray-300 flex justify-between items-center" style={{ backgroundColor: '#21252b', boxShadow: "0px 6px 20px rgb(0 0 0 / 35%)" }}>
+                    <form>
+                        <input type="text" defaultValue={this.state.name} className="outline-none bg-transparent w-full" />
+                    </form>
+                    <div className="flex">
+                        <BiTrash className="w-7 h-7 p-1 rounded cursor-pointer transition hover:bg-gray-700" onClick={this.remove} />
                     </div>
                 </div>
+                <div ref={this.assign} className='h-80 w-full lg:max-w-lg'></div>
             </div>
         )
     }
+}
+
+export const Blocks = () => {
+    const [blocks, setBlocks] = useState<iblock[]>([
+        { id: uuidv4() },
+        { id: uuidv4() }
+    ])
+    const [isOnRemove, setIsOnRemove] = useState(false)
+    const remove = (id: string, block: Editor) => {
+        if (isOnRemove) return;
+        if (blocks.length > 2) {
+            setIsOnRemove(true)
+            block.get_block()?.classList.remove("h-80")
+            block.get_block()?.classList.add("opacity-0")
+            setTimeout(() => {
+                setBlocks(blocks.filter(x => x.id != id))
+                setIsOnRemove(false)
+            }, 700)
+        } else {
+            setIsOnRemove(true)
+            setTimeout(() => {
+                setIsOnRemove(false)
+            }, 410)
+            toast.error('🦄 block of code cannot less than 2', {
+                position: "top-right",
+                theme: 'dark',
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+        }
+    }
+    const renderBlock = () => {
+        return (
+            blocks?.map(block => {
+                return (
+                    <Editor block={block} key={block.id} remove={remove} />
+                )
+            })
+        )
+    }
+    return (
+        <div>
+            <div className="flex items-center">
+                <button className="button is-dark" onClick={() => { }}>▶</button>
+                <button className="button no-bg is-border-dark mx-2" onClick={() => {
+                    const block = { id: uuidv4() }
+                    setBlocks([block, ...blocks])
+                }}>Add Test Case</button>
+            </div>
+            <div className="lg:flex w-full">
+                <div className="min-h-40 w-full relative mb-20 lg:mb-0 lg:max-w-lg transition-all">
+                    {
+                        renderBlock()
+                    }
+                </div>
+                <div className="lg:ml-16 rounded mt-4 mb-4 w-full p-5 select-none" style={{ background: '#282c34' }}>
+                    <div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
 }

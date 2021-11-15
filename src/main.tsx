@@ -5,7 +5,7 @@ import App from './App'
 import './assets/css/tailwind.pcss'
 import './assets/css/index.scss'
 
-(async () => {
+(async () => { 
   await loadWASM('/onigasm.wasm');
   ReactDOM.render(
     <React.StrictMode>
