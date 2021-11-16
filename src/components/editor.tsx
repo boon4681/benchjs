@@ -14,10 +14,11 @@ import { wireTmGrammars } from 'monaco-editor-textmate';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BiTrash } from 'react-icons/bi'
+import { MdDragIndicator } from 'react-icons/md'
 
 import { ToastContainer, toast } from 'react-toastify';
 
-import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext,DraggableProvided, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 ///////////////////
 
 const registry = new Registry({
@@ -58,7 +59,8 @@ window.MonacoEnvironment = {
 type iblock = { id: string }
 type pEditor = {
     block: iblock,
-    remove: (id: string, block: Editor) => void
+    remove: (id: string, block: Editor) => void,
+    dragHandleProps:DraggableProvided["dragHandleProps"]
 }
 type sEditor = {
     name: string,
@@ -106,7 +108,13 @@ export class Editor extends React.Component<pEditor, sEditor>{
     }
     render() {
         return (
-            <div ref={this.assignblock} className='overflow-hidden h-0 w-full opacity-0 transition-all duration-1000 rounded my-4 shadow-2xl'>
+            <div ref={this.assignblock} className='overflow-hidden relative h-0 w-full opacity-0 transition-all duration-1000 rounded my-4 shadow-2xl'>
+                <div className="mx-auto w-full max-w-min">
+                <div {...this.props.dragHandleProps} className="absolute flex items-end justify-center rounded-md -top-4 h-8 w-10 bg-gray-700 transition-none">
+                    <MdDragIndicator />
+                </div>
+
+                </div>
                 <div className="py-2 px-4 text-md text-gray-300 flex justify-between items-center" style={{ backgroundColor: '#21252b', boxShadow: "0px 6px 20px rgb(0 0 0 / 35%)" }}>
                     <form>
                         <input type="text" defaultValue={this.state.name} className="outline-none bg-transparent w-full" />
@@ -169,17 +177,17 @@ export const Blocks = () => {
         newBlocks.splice(destination.index, 0, removed);
         setBlocks(newBlocks)
     }
-    const renderBlock = () =>{
+    const renderBlock = () => {
         return blocks?.map((block, i) => {
             return (
                 <Draggable key={block.id} draggableId={block.id} index={i}>
                     {provided => (
                         <div
                             {...provided.draggableProps}
-                            {...provided.dragHandleProps}
                             ref={provided.innerRef}
+                            className="relative"
                         >
-                            <Editor block={block} key={block.id} remove={remove} />
+                            <Editor dragHandleProps={provided.dragHandleProps} block={block} key={block.id} remove={remove} />
                         </div>
                     )}
                 </Draggable>
