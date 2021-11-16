@@ -16,6 +16,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { BiTrash } from 'react-icons/bi'
 
 import { ToastContainer, toast } from 'react-toastify';
+
+import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 ///////////////////
 
 const registry = new Registry({
@@ -151,14 +153,38 @@ export const Blocks = () => {
             });
         }
     }
-    const renderBlock = () => {
-        return (
-            blocks?.map(block => {
-                return (
-                    <Editor block={block} key={block.id} remove={remove} />
-                )
-            })
-        )
+    const onDragEnd = (a: DropResult) => {
+        const { destination, source, draggableId } = a;
+        if (!destination) {
+            return;
+        }
+        if (
+            destination.droppableId === source.droppableId &&
+            destination.index === source.index
+        ) {
+            return;
+        }
+        const newBlocks = Array.from(blocks);
+        const [removed] = newBlocks.splice(source.index, 1);
+        newBlocks.splice(destination.index, 0, removed);
+        setBlocks(newBlocks)
+    }
+    const renderBlock = () =>{
+        return blocks?.map((block, i) => {
+            return (
+                <Draggable key={block.id} draggableId={block.id} index={i}>
+                    {provided => (
+                        <div
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            ref={provided.innerRef}
+                        >
+                            <Editor block={block} key={block.id} remove={remove} />
+                        </div>
+                    )}
+                </Draggable>
+            )
+        })
     }
     return (
         <div>
@@ -171,9 +197,16 @@ export const Blocks = () => {
             </div>
             <div className="lg:flex w-full">
                 <div className="min-h-40 w-full relative mb-20 lg:mb-0 lg:max-w-lg transition-all">
-                    {
-                        renderBlock()
-                    }
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable droppableId={"1"}>
+                            {provided => (
+                                <div ref={provided.innerRef} {...provided.droppableProps}>
+                                    {renderBlock()}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
                 </div>
                 <div className="lg:ml-16 rounded mt-4 mb-4 w-full p-5 select-none" style={{ background: '#282c34' }}>
                     <div>
