@@ -14,8 +14,11 @@ import { wireTmGrammars } from 'monaco-editor-textmate';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BiTrash } from 'react-icons/bi'
+import { MdDragIndicator } from 'react-icons/md'
 
 import { ToastContainer, toast } from 'react-toastify';
+
+import { DragDropContext,DraggableProvided, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 ///////////////////
 
 const registry = new Registry({
@@ -56,7 +59,8 @@ window.MonacoEnvironment = {
 type iblock = { id: string }
 type pEditor = {
     block: iblock,
-    remove: (id: string, block: Editor) => void
+    remove: (id: string, block: Editor) => void,
+    dragHandleProps:DraggableProvided["dragHandleProps"]
 }
 type sEditor = {
     name: string,
@@ -104,7 +108,13 @@ export class Editor extends React.Component<pEditor, sEditor>{
     }
     render() {
         return (
-            <div ref={this.assignblock} className='overflow-hidden h-0 w-full opacity-0 transition-all duration-1000 rounded my-4 shadow-2xl'>
+            <div ref={this.assignblock} className='overflow-hidden relative h-0 w-full opacity-0 transition-all duration-1000 rounded my-4 shadow-2xl'>
+                <div className="mx-auto w-full max-w-min">
+                <div {...this.props.dragHandleProps} className="absolute flex items-end justify-center rounded-md -top-4 h-8 w-10 bg-gray-700 transition-none">
+                    <MdDragIndicator />
+                </div>
+
+                </div>
                 <div className="py-2 px-4 text-md text-gray-300 flex justify-between items-center" style={{ backgroundColor: '#21252b', boxShadow: "0px 6px 20px rgb(0 0 0 / 35%)" }}>
                     <form>
                         <input type="text" defaultValue={this.state.name} className="outline-none bg-transparent w-full" />
@@ -151,14 +161,38 @@ export const Blocks = () => {
             });
         }
     }
+    const onDragEnd = (a: DropResult) => {
+        const { destination, source, draggableId } = a;
+        if (!destination) {
+            return;
+        }
+        if (
+            destination.droppableId === source.droppableId &&
+            destination.index === source.index
+        ) {
+            return;
+        }
+        const newBlocks = Array.from(blocks);
+        const [removed] = newBlocks.splice(source.index, 1);
+        newBlocks.splice(destination.index, 0, removed);
+        setBlocks(newBlocks)
+    }
     const renderBlock = () => {
-        return (
-            blocks?.map(block => {
-                return (
-                    <Editor block={block} key={block.id} remove={remove} />
-                )
-            })
-        )
+        return blocks?.map((block, i) => {
+            return (
+                <Draggable key={block.id} draggableId={block.id} index={i}>
+                    {provided => (
+                        <div
+                            {...provided.draggableProps}
+                            ref={provided.innerRef}
+                            className="relative"
+                        >
+                            <Editor dragHandleProps={provided.dragHandleProps} block={block} key={block.id} remove={remove} />
+                        </div>
+                    )}
+                </Draggable>
+            )
+        })
     }
     return (
         <div>
@@ -171,9 +205,16 @@ export const Blocks = () => {
             </div>
             <div className="lg:flex w-full">
                 <div className="min-h-40 w-full relative mb-20 lg:mb-0 lg:max-w-lg transition-all">
-                    {
-                        renderBlock()
-                    }
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable droppableId={"1"}>
+                            {provided => (
+                                <div ref={provided.innerRef} {...provided.droppableProps}>
+                                    {renderBlock()}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
                 </div>
                 <div className="lg:ml-16 rounded mt-4 mb-4 w-full p-5 select-none" style={{ background: '#282c34' }}>
                     <div>
