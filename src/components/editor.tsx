@@ -15,7 +15,7 @@ import { wireTmGrammars } from 'monaco-editor-textmate';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BiTrash } from 'react-icons/bi'
-import { MdDragIndicator } from 'react-icons/md'
+import { MdDragIndicator, MdPlayArrow, MdStop } from 'react-icons/md'
 
 import { ToastContainer, toast } from 'react-toastify';
 
@@ -149,9 +149,10 @@ export class Editor extends React.Component<pEditor, sEditor>{
 
 export const Blocks = () => {
     const [blocks, setBlocks] = useState<iblock[]>([
-        { id: uuidv4(), name: "Test", value: "" },
+        { id: uuidv4(), name: "Test", value: "for(let i=0;i<100000000;i++){}" },
         { id: uuidv4(), name: "Test", value: "" }
     ])
+    const [isRunninTask, setIsRunningTask] = useState(false)
     const [isOnRemove, setIsOnRemove] = useState(false)
     const remove = (id: string, block: Editor) => {
         if (isOnRemove) return;
@@ -196,6 +197,7 @@ export const Blocks = () => {
         setBlocks(newBlocks)
     }
     const addingBlock = () => {
+        if(isRunninTask) return;
         const block = { id: uuidv4(), name: "Test", value: "" }
         setBlocks([block, ...blocks])
     }
@@ -238,63 +240,102 @@ export const Blocks = () => {
         })
     }
     const bars = () => {
+        const max = Math.max(...blocks.map(a => (a.result) ? a.result.hz : 0)) || 0
         return blocks.map((a, i) => {
+            const color = hsv2rgb((100 / max) * ((a.result) ? a.result.hz : 0), 0.50, 0.80)
             return (
-                <div key={a.id + "aa"} className={`px-3 py-1.5 rounded-lg flex justify-between ${i == 0 ? 'mb-3' : i == blocks.length - 1 ? "" : "mb-3"}`} style={{ backgroundColor: '#374151' }}>
+                <div key={a.id + "aa"} className={`px-3 py-1.5 overflow-hidden relative rounded-lg flex justify-between ${i == 0 ? 'mb-3' : i == blocks.length - 1 ? "" : "mb-3"}`} style={{ backgroundColor: '#374151' }}>
                     <div>{a.name}</div>
-                    <div>{a.result.hz.toFixed(5)}</div>
+                    <div className="whitespace-pre">{(a.result) ? (a.result.hz).toFixed(2) : (0).toFixed(2)} ops/sec</div>
+                    <div className="absolute bottom-0 left-0 h-1 w-full"
+                        style={{
+                            backgroundColor: '#5a5a5a'
+                        }}>
+                        <div className="h-1 transition-all duration-200 w-full ease-in-out"
+                            style={{
+                                backgroundColor: `rgb(${color[0]},${color[1]},${color[2]})`,
+                                width: `${((a.result) ? (a.result.sample.length) : (0)) * 100 / 30}%`
+                            }}>
+                        </div>
+                    </div>
                 </div>
             )
         })
     }
+    const sleep = (t: number) => {
+        return new Promise(resolve => setTimeout(resolve, t))
+    }
     const runTask = async () => {
-        const url = (await fetch("./_.js")).url
-        const task = blocks.map((block, index) => {
-            return new Promise((resolve, reject) => {
-                const worker = new Worker(url, { "type": "module"})
-                worker.onmessage = (event) => {
-                    console.log(event)
-                    if (event.data.error) {
-                        toast.error(`💥 ${block.name} error`, {
-                            position: "top-right",
-                            theme: 'dark',
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                            progress: undefined,
-                        });
-                        worker.terminate()
-                        reject()
-                        return
-                    };
+        if (!isRunninTask) {
+            setIsRunningTask(true)
+            const url = (await fetch("./_.js")).url
+            const task = blocks.map((block, index) => {
+                return new Promise(async (resolve, reject) => {
+                    const worker = new Worker(url, { "type": "module" })
                     const update = Array.from(blocks);
-                    update[index].result = event.data
+                    update[index].result = null
+                    update[index].task = worker
                     setBlocks(update)
-                    if (event.data.status == "done") {
-                        resolve(null)
-                        worker.terminate()
+                    worker.onmessage = (event) => {
+                        if (event.data.error) {
+                            toast.error(`💥 ${block.name} error`, {
+                                position: "top-right",
+                                theme: 'dark',
+                                hideProgressBar: false,
+                                closeOnClick: true,
+                                pauseOnHover: true,
+                                draggable: true,
+                                progress: undefined,
+                            });
+                            worker.terminate()
+                            reject()
+                            return
+                        };
+                        const update = Array.from(blocks);
+                        update[index].result = event.data
+                        setBlocks(update)
+                        if (event.data.status == "done") {
+                            resolve(null)
+                            worker.terminate()
+                        }
                     }
-                }
-                worker.postMessage(block.value)
+                    await sleep(400)
+                    worker.postMessage(block.value)
+                })
             })
-        })
-        await Promise.all(task)
-        toast.success(`🌈 benchmarking done`, {
-            position: "top-right",
-            theme: 'dark',
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-        });
+            await Promise.all(task)
+            await sleep(700)
+            setIsRunningTask(false)
+            toast.success(`🌈 benchmarking done`, {
+                position: "top-right",
+                theme: 'dark',
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+        }else{
+            blocks.forEach(a=>{
+                a.task?.terminate()
+            })
+            toast.warn(`stoped benchmarking`, {
+                position: "top-right",
+                theme: 'dark',
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+            setIsRunningTask(false)
+        }
     }
     return (
         <div className="">
             <div className="flex items-center">
-                <button className="button is-dark" onClick={runTask}>▶</button>
-                <button className="button no-bg is-border-dark mx-2" onClick={addingBlock}>Add Test Case</button>
+                <button className={`button ${(isRunninTask) ? "is-red" : "is-dark"}`} onClick={runTask}>{(!isRunninTask) ? <MdPlayArrow className="w-6 h-6" /> : <MdStop className="w-6 h-6" />}</button>
+                <button className={`button no-bg is-border-dark mx-2 ${(isRunninTask) ? "disable" : ""}`} onClick={addingBlock}>Add Test Case</button>
             </div>
             <div className="lg:flex w-full">
                 <div className="min-h-40 w-full relative mb-20 lg:mb-0 lg:max-w-lg transition-all">

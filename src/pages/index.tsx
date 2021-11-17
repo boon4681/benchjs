@@ -17,7 +17,7 @@ export default () => {
                         setDonate(false)
                     }} />
                 <main>
-                    <nav className="w-full max-w-7xl mx-auto box-border sticky top-0 z-20">
+                    <nav className="w-full max-w-7xl mx-auto box-border top-0 z-20">
                         <nav className="flex justify-between py-7 px-3 select-none">
                             <a href="/">
                                 <div className="flex items-center logo">
