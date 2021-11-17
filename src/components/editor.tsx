@@ -246,7 +246,7 @@ export const Blocks = () => {
             return (
                 <div key={a.id + "aa"} className={`px-3 py-1.5 overflow-hidden relative rounded-lg flex justify-between ${i == 0 ? 'mb-3' : i == blocks.length - 1 ? "" : "mb-3"}`} style={{ backgroundColor: '#374151' }}>
                     <div>{a.name}</div>
-                    <div className="whitespace-pre">{(a.result) ? (a.result.hz).toFixed(2) : (0).toFixed(2)} ops/sec</div>
+                    <div className="whitespace-pre">{(a.result) ? (a.result.hz).toFixed(2) : (0).toFixed(2)} ops/sec  ±{(a.result) ? (a.result.rme).toFixed(2):(0)}</div>
                     <div className="absolute bottom-0 left-0 h-1 w-full"
                         style={{
                             backgroundColor: '#5a5a5a'
@@ -278,7 +278,7 @@ export const Blocks = () => {
                     setBlocks(update)
                     worker.onmessage = (event) => {
                         if (event.data.error) {
-                            toast.error(`💥 ${block.name} error`, {
+                            toast.error(`🔥 ${block.name} error`, {
                                 position: "top-right",
                                 theme: 'dark',
                                 hideProgressBar: false,
@@ -288,14 +288,14 @@ export const Blocks = () => {
                                 progress: undefined,
                             });
                             worker.terminate()
-                            reject()
+                            resolve(false)
                             return
                         };
                         const update = Array.from(blocks);
                         update[index].result = event.data
                         setBlocks(update)
                         if (event.data.status == "done") {
-                            resolve(null)
+                            resolve(true)
                             worker.terminate()
                         }
                     }
