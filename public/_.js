@@ -34,7 +34,7 @@ onmessage = async ({ data }) => {
     const _m = async function (_i, _, code) {
         let i = _i
         let t = await eval(`(async function () { const x = _.now(); while (i--) {${code};}; return _.now() - x })`)()
-        return (t > 0) ? t / _i : await _m(_i+5, _, code)
+        return (t > 0) ? t / _i : await _m(_i*2, _, code)
     }
     const _rme = function (sample) {
         const l = sample.length
@@ -59,6 +59,7 @@ onmessage = async ({ data }) => {
         const rme = _rme(sample)
         postMessage({ hz: mean(sample), rme, sample, status: "done" })
     } catch (error) {
+        console.log(error)
         postMessage({ error })
     }
 }
