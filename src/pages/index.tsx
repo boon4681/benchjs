@@ -1,8 +1,6 @@
 import React, { useState, ReactComponentElement, useRef, useEffect } from 'react'
-import { HiPlus } from 'react-icons/hi'
 import { Blocks } from '../components/editor';
 import { Kofi_Panel } from '../components/Donate';
-import { BiMinus } from "react-icons/bi";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../assets/css/custom.toast.scss'
@@ -10,7 +8,6 @@ import { AiFillGithub } from 'react-icons/ai'
 
 export default () => {
     const [donate, setDonate] = useState(false)
-    const [block, setBlock] = useState<{ id: string }>()
     return (
         <>
             <div className="relative flex box-border mx-auto flex-col min-h-screen">
@@ -59,8 +56,8 @@ export default () => {
                     </div>
                 </main>
             </div>
-            <footer className='mt-56 py-10 flex items-center justify-center' style={{ backgroundColor: '#16161a' }}>
-                <a target="_blank" href="https://github.com/boon4681/benchjs" className="flex items-center hover:text-gray-200"><AiFillGithub className="w-8 h-8" /><div className="ml-2">View on Github</div></a>
+            <footer className='mt-10 py-10 flex items-center justify-center' style={{ backgroundColor: '#16161a' }}>
+                <a rel="noopener noreferrer" target="_blank" href="https://github.com/boon4681/benchjs" className="flex items-center hover:text-gray-200"><AiFillGithub className="w-8 h-8" /><div className="ml-2">View on Github</div></a>
             </footer>
         </>
     )
