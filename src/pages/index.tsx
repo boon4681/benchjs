@@ -26,7 +26,7 @@ export default () => {
                             </a>
                             <div className="flex items-center h-9 w-auto">
                                 <div className="px-4">
-                                    <button className="button is-link" onClick={() => {
+                                    <button className="button is-link" role="button" onClick={() => {
                                         setDonate(true)
                                     }}>Donate</button>
                                 </div>
