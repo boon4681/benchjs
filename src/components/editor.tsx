@@ -149,7 +149,7 @@ export class Editor extends React.Component<pEditor, sEditor>{
 
 export const Blocks = () => {
     const [blocks, setBlocks] = useState<iblock[]>([
-        { id: uuidv4(), name: "Test", value: "for(let i=0;i<100000000;i++){}" },
+        { id: uuidv4(), name: "Test", value: "" },
         { id: uuidv4(), name: "Test", value: "" }
     ])
     const [isRunninTask, setIsRunningTask] = useState(false)
