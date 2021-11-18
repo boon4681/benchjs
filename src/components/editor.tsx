@@ -95,10 +95,11 @@ export class Editor extends React.Component<pEditor, sEditor>{
     componentDidMount() {
         if (this.ele && this.block) {
             const monaco = editor.create(this.ele as HTMLElement, { theme: 'onedark', automaticLayout: true, language: "javascript", value: this.props.block.value })
+            this.liftOff(monaco)
+            monaco.updateOptions({theme: 'onedark'})
             monaco.onDidChangeModelContent(a => {
                 this.props.changeValue(monaco.getValue())
             })
-            this.liftOff(monaco)
             this.block.classList.add("h-80")
             this.block.classList.remove("opacity-0")
         }
