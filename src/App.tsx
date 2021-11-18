@@ -8,7 +8,7 @@ function App() {
     <div>
       <Router>
         <Switch>
-          <Route exact path="/benchjs"><Home /></Route>
+          <Route exact path="/"><Home /></Route>
           <Route exact path="*"><_404 /></Route>
         </Switch>
       </Router>
