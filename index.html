@@ -8,7 +8,8 @@
   <link rel="apple-touch-icon" href="images/logo.jpg" />
   <link rel="apple-touch-icon-precomposed" href="images/logo.jpg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Benchjs - JavaScript benchmark tool Online JavaScript performance benchmark / playground.">
+  <meta name="description"
+    content="Benchjs - JavaScript benchmark tool Online JavaScript performance benchmark / playground.">
   <meta name="application-name" content="Benchjs">
   <meta name="keywords" content="boon4681,benchmark,JavaScript,Online" />
   <meta property="og:title" content="Benchjs - JavaScript benchmark tool" />
@@ -43,6 +44,20 @@
 
 <body>
   <main class="min-h-screen"></main>
+  <script type="text/javascript">
+    try {
+      if (!WebAssembly) {}
+    } catch (error) {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+          document.body.querySelector("main").innerHTML = xhr.responseText;
+        }
+      }
+      xhr.open('GET', './web.notsupport', true);
+      xhr.send(null);
+    }
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 
