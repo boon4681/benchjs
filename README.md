@@ -1,4 +1,4 @@
-# [benchjs](benchjs.boon4681.com)
+# [benchjs](https://benchjs.boon4681.com)
 
 ## Running the Site
 
