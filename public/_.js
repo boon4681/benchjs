@@ -1,4 +1,4 @@
-onmessage = async ({ data }) => {
+self.onmessage = async ({ data }) => {
     const code = data
     function time() {
         try {
