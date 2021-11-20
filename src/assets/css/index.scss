@@ -31,6 +31,16 @@ body {
       background: #d63e3e;
     }
   }
+
+  &.is-select{
+    background: #38404c;
+    border-color: transparent;
+    color: #fff;
+    &:hover {
+      background: #5858bf;
+    }
+  }
+  
   &.is-link {
     background: #33aaff;
     border-color: transparent;

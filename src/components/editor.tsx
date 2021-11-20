@@ -21,6 +21,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { DragDropContext, DraggableProvided, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 
 import { hsv2rgb } from '../.libs/color'
+import { CLang } from './CLang'
 ///////////////////
 
 
@@ -80,6 +81,7 @@ export class Editor extends React.Component<pEditor, sEditor>{
     private ele?: HTMLDivElement
     private inputName?: HTMLInputElement
     private block?: HTMLDivElement
+    private editor?:editor.IStandaloneCodeEditor
     constructor(props: pEditor) {
         super(props)
         this.state = {
@@ -102,12 +104,20 @@ export class Editor extends React.Component<pEditor, sEditor>{
         if (this.ele && this.block) {
             const monaco = editor.create(this.ele as HTMLElement, { theme: 'onedark', automaticLayout: true, language: this.props.lang || "javascript", value: this.props.block.value })
             this.liftOff(monaco)
+            this.editor = monaco
             monaco.updateOptions({ theme: 'onedark' })
             monaco.onDidChangeModelContent(a => {
                 this.props.changeValue(monaco.getValue())
             })
             this.block.classList.add("h-80")
             this.block.classList.remove("opacity-0")
+        }
+    }
+    componentDidUpdate(){
+        if(this.editor){
+            const model = this.editor.getModel()
+            if(model)
+            monaco.editor.setModelLanguage(model,this.props.lang)
         }
     }
     liftOff = async (editor: any) => {
@@ -372,7 +382,7 @@ export const Blocks = () => {
                     const update = Array.from(blocks);
                     update[data.index].result = data
                     setBlocks(update)
-                    if (data.status == "done" && data.index == blocks.length -1) {
+                    if (data.status == "done" && data.index == blocks.length - 1) {
                         await sleep(700)
                         setIsRunningTask(false)
                         toast.success(`🌈 benchmarking done`, {
@@ -408,6 +418,7 @@ export const Blocks = () => {
     return (
         <div className="">
             <div className="flex items-center">
+                <CLang onChange={setLang} />
                 <button className={`button ${(isRunninTask) ? "is-red" : "is-dark"}`} onClick={runTask}>{(!isRunninTask) ? <MdPlayArrow className="w-6 h-6" /> : <MdStop className="w-6 h-6" />}</button>
                 <button className={`button no-bg is-border-dark mx-2 ${(isRunninTask) ? "disable" : ""}`} onClick={addingBlock}>Add Test Case</button>
             </div>
