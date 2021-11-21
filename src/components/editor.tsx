@@ -418,7 +418,7 @@ export const Blocks = () => {
     }
     return (
         <div className="">
-            <div className="flex items-center">
+            <div className="flex items-center w-full overflow-x-scroll no-bar">
                 <CLang onChange={setLang} />
                 <button className={`button ${(isRunninTask) ? "is-red" : "is-dark"}`} onClick={runTask}>{(!isRunninTask) ? <MdPlayArrow className="w-6 h-6" /> : <MdStop className="w-6 h-6" />}</button>
                 <button className={`button no-bg is-border-dark mx-2 ${(isRunninTask) ? "disable" : ""}`} onClick={addingBlock}>Add Test Case</button>

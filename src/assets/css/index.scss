@@ -22,6 +22,7 @@ body {
       background: #393a3b;
     }
   }
+
   &.is-red {
     background: #df4444;
     border-color: transparent;
@@ -32,15 +33,16 @@ body {
     }
   }
 
-  &.is-select{
+  &.is-select {
     background: #38404c;
     border-color: transparent;
     color: #fff;
+
     &:hover {
       background: #5858bf;
     }
   }
-  
+
   &.is-link {
     background: #33aaff;
     border-color: transparent;
@@ -104,4 +106,13 @@ body {
   display: inline-flex;
   height: 2.5em;
   line-height: 1.5;
+}
+
+.no-bar::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.no-bar::-webkit-scrollbar-thumb {
+  background: #00000000;
 }
