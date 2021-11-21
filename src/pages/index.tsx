@@ -34,7 +34,7 @@ export default () => {
                         </nav>
                     </nav>
                     <div className="max-w-6xl mx-auto relative h-auto" style={{ minHeight: "400px" }}>
-                        <div className="w-full relative h-auto px-10 sm:px-20">
+                        <div className="w-full relative h-auto px-6 sm:px-10">
                             <div className="fixed z-50 pointer-events-none xl:absolute top-0 left-0 overflow-hidden w-full h-full">
                                 <div className="pointer-events-auto">
                                     <ToastContainer

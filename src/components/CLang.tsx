@@ -10,11 +10,11 @@ function getTextWidth(text: string):number {
     return 0
 }
 export const CLang = (props:{onChange:(a:string)=>void}) => {
-    const [lang, setLang] = useState("python")
-    const [onSelect, setOnSelect] = useState(true)
+    const [lang, setLang] = useState("javascript")
+    const [onSelect, setOnSelect] = useState(false)
     const lang_list = [
-        "python",
-        "javascript"
+        "javascript",
+        "python"
     ]
     return (
         <>

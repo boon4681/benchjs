@@ -81,7 +81,7 @@ export class Editor extends React.Component<pEditor, sEditor>{
     private ele?: HTMLDivElement
     private inputName?: HTMLInputElement
     private block?: HTMLDivElement
-    private editor?:editor.IStandaloneCodeEditor
+    private editor?: editor.IStandaloneCodeEditor
     constructor(props: pEditor) {
         super(props)
         this.state = {
@@ -113,11 +113,11 @@ export class Editor extends React.Component<pEditor, sEditor>{
             this.block.classList.remove("opacity-0")
         }
     }
-    componentDidUpdate(){
-        if(this.editor){
+    componentDidUpdate() {
+        if (this.editor) {
             const model = this.editor.getModel()
-            if(model)
-            monaco.editor.setModelLanguage(model,this.props.lang)
+            if (model)
+                monaco.editor.setModelLanguage(model, this.props.lang)
         }
     }
     liftOff = async (editor: any) => {
@@ -172,9 +172,7 @@ export const Blocks = () => {
         { id: uuidv4(), name: "Test", value: "" }
     ])
     const [lang, setLang] = useState("python")
-    // useEffect(()=>{
-    //     setLang("javascript")
-    // },[])
+    const [winWidth, setWinWidth] = useState(window.innerWidth)
     const [isRunninTask, setIsRunningTask] = useState(false)
     const [isOnRemove, setIsOnRemove] = useState(false)
     const remove = (id: string, block: Editor) => {
@@ -270,7 +268,7 @@ export const Blocks = () => {
             return (
                 <div key={a.id + "aa"} className={`px-3 py-1.5 overflow-hidden relative rounded-lg flex justify-between ${i == 0 ? 'mb-3' : i == blocks.length - 1 ? "" : "mb-3"}`} style={{ backgroundColor: '#374151' }}>
                     <div>{a.name}</div>
-                    <div className="whitespace-pre">{(a.result) ? (a.result.hz).toFixed(2) : (0).toFixed(2)} ops/sec  ±{(a.result) ? (a.result.rme).toFixed(2) : (0)}</div>
+                    <div className="whitespace-pre">{(a.result) ? (a.result.hz).toFixed(2) : (0).toFixed(2)} ops/sec{winWidth>500?("  ±" + ((a.result) ? (a.result.rme).toFixed(2) : (0))):""}</div>
                     <div className="absolute bottom-0 left-0 h-1 w-full"
                         style={{
                             backgroundColor: '#5a5a5a'
@@ -415,6 +413,9 @@ export const Blocks = () => {
             setIsRunningTask(false)
         }
     }
+    window.onresize = () =>{
+        setWinWidth(window.innerWidth)
+    }
     return (
         <div className="">
             <div className="flex items-center">
@@ -423,7 +424,7 @@ export const Blocks = () => {
                 <button className={`button no-bg is-border-dark mx-2 ${(isRunninTask) ? "disable" : ""}`} onClick={addingBlock}>Add Test Case</button>
             </div>
             <div className="lg:flex w-full">
-                <div className="min-h-40 w-full relative mb-20 lg:mb-0 lg:max-w-lg transition-all">
+                <div className="min-h-40 w-full relative mb-16 lg:mb-0 lg:max-w-lg transition-all">
                     <DragDropContext onDragEnd={onDragEnd}>
                         <Droppable droppableId={"1"}>
                             {provided => (
