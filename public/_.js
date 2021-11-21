@@ -34,7 +34,7 @@ self.onmessage = async ({ data }) => {
     const _m = async function (_i, _, code) {
         let i = _i
         let t = await eval(`(async function () { const x = _.now(); while (i--) {${code};}; return _.now() - x })`)()
-        return (t > 0) ? t / _i : await _m(_i*2, _, code)
+        return (t > 0) ? t / _i : await _m(_i**2, _, code)
     }
     const _rme = function (sample) {
         const l = sample.length
@@ -50,7 +50,7 @@ self.onmessage = async ({ data }) => {
         let boon4681_benchmark_i_ = 31
         let sample = []
         while (--boon4681_benchmark_i_) {
-            let _t_ = await _m(1, _, code)
+            let _t_ = await _m(2, _, code)
             const hz = 1000 / (_t_)
             sample.push(hz)
             const rme = _rme(sample)

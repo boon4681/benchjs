@@ -43,7 +43,7 @@ def _m(i):
     if(t > 0):
         return t / i
     else:
-        return _m(i+1)
+        return _m(i**2)
 
 
 def _rme(sample):
@@ -62,7 +62,7 @@ try:
     sample = []
     status = ""
     for _boon4681_counter in range(boon4681_benchmark_i_):
-        _t_ = _m(1)
+        _t_ = _m(2)
         hz = 1000 / (_t_)
         sample.append(hz)
         rme = _rme(sample)
