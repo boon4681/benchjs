@@ -171,7 +171,7 @@ export const Blocks = () => {
         { id: uuidv4(), name: "Test", value: "" },
         { id: uuidv4(), name: "Test", value: "" }
     ])
-    const [lang, setLang] = useState("python")
+    const [lang, setLang] = useState("javascript")
     const [winWidth, setWinWidth] = useState(window.innerWidth)
     const [isRunninTask, setIsRunningTask] = useState(false)
     const [isOnRemove, setIsOnRemove] = useState(false)

@@ -15,6 +15,7 @@
     "react-beautiful-dnd": "^13.1.0",
     "react-dom": "^17.0.0",
     "react-icons": "^4.3.1",
+    "react-markdown": "^7.1.0",
     "react-router-dom": "^5.3.0",
     "react-toastify": "^8.0.3",
     "uuid": "^8.3.2"
