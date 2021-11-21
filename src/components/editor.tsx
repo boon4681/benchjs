@@ -1,10 +1,9 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import * as monaco from 'monaco-editor'
 import { editor, languages } from 'monaco-editor'
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
-
 
 import dark_plus from '../assets/themes/dark_plus.json'
 import onedark from '../assets/themes/onedark.json'
@@ -22,7 +21,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import { DragDropContext, DraggableProvided, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 
 import { hsv2rgb } from '../.libs/color'
+import { CLang } from './CLang'
 ///////////////////
+
 
 const registry = new Registry({
     getGrammarDefinition: async (scopeName) => {
@@ -36,6 +37,11 @@ const registry = new Registry({
                 return {
                     format: 'json',
                     content: await (await fetch(`/tmGrammar/TypeScript.tmLanguage.json`)).text()
+                }
+            case 'source.py':
+                return {
+                    format: 'json',
+                    content: await (await fetch(`/tmGrammar/Python.tmLanguage.json`)).text()
                 }
         }
         return {
@@ -62,6 +68,7 @@ window.MonacoEnvironment = {
 type iblock = { id: string, name: string, value: string, task?: Worker, result?: any }
 type pEditor = {
     block: iblock,
+    lang: string,
     remove: (id: string, block: Editor) => void,
     changeName: (name: string) => void,
     changeValue: (value: string) => void,
@@ -74,6 +81,7 @@ export class Editor extends React.Component<pEditor, sEditor>{
     private ele?: HTMLDivElement
     private inputName?: HTMLInputElement
     private block?: HTMLDivElement
+    private editor?: editor.IStandaloneCodeEditor
     constructor(props: pEditor) {
         super(props)
         this.state = {
@@ -94,9 +102,10 @@ export class Editor extends React.Component<pEditor, sEditor>{
     }
     componentDidMount() {
         if (this.ele && this.block) {
-            const monaco = editor.create(this.ele as HTMLElement, { theme: 'onedark', automaticLayout: true, language: "javascript", value: this.props.block.value })
+            const monaco = editor.create(this.ele as HTMLElement, { theme: 'onedark', automaticLayout: true, language: this.props.lang || "javascript", value: this.props.block.value })
             this.liftOff(monaco)
-            monaco.updateOptions({theme: 'onedark'})
+            this.editor = monaco
+            monaco.updateOptions({ theme: 'onedark' })
             monaco.onDidChangeModelContent(a => {
                 this.props.changeValue(monaco.getValue())
             })
@@ -104,13 +113,22 @@ export class Editor extends React.Component<pEditor, sEditor>{
             this.block.classList.remove("opacity-0")
         }
     }
+    componentDidUpdate() {
+        if (this.editor) {
+            const model = this.editor.getModel()
+            if (model)
+                monaco.editor.setModelLanguage(model, this.props.lang)
+        }
+    }
     liftOff = async (editor: any) => {
         const grammars = new Map();
         grammars.set('typescript', 'source.ts');
         grammars.set('javascript', 'source.js');
+        grammars.set('python', 'source.py');
 
         languages.register({ id: 'typescript' });
         languages.register({ id: 'javascript' });
+        languages.register({ id: 'python' });
 
         await wireTmGrammars(monaco, registry, grammars, editor);
     };
@@ -153,6 +171,8 @@ export const Blocks = () => {
         { id: uuidv4(), name: "Test", value: "" },
         { id: uuidv4(), name: "Test", value: "" }
     ])
+    const [lang, setLang] = useState("javascript")
+    const [winWidth, setWinWidth] = useState(window.innerWidth)
     const [isRunninTask, setIsRunningTask] = useState(false)
     const [isOnRemove, setIsOnRemove] = useState(false)
     const remove = (id: string, block: Editor) => {
@@ -198,7 +218,7 @@ export const Blocks = () => {
         setBlocks(newBlocks)
     }
     const addingBlock = () => {
-        if(isRunninTask) return;
+        if (isRunninTask) return;
         const block = { id: uuidv4(), name: "Test", value: "" }
         setBlocks([block, ...blocks])
     }
@@ -229,6 +249,7 @@ export const Blocks = () => {
                                 changeValue={(a) => {
                                     changeValue(i, a)
                                 }}
+                                lang={lang}
                                 dragHandleProps={provided.dragHandleProps}
                                 block={block}
                                 key={block.id}
@@ -247,7 +268,7 @@ export const Blocks = () => {
             return (
                 <div key={a.id + "aa"} className={`px-3 py-1.5 overflow-hidden relative rounded-lg flex justify-between ${i == 0 ? 'mb-3' : i == blocks.length - 1 ? "" : "mb-3"}`} style={{ backgroundColor: '#374151' }}>
                     <div>{a.name}</div>
-                    <div className="whitespace-pre">{(a.result) ? (a.result.hz).toFixed(2) : (0).toFixed(2)} ops/sec  ±{(a.result) ? (a.result.rme).toFixed(2):(0)}</div>
+                    <div className="whitespace-pre">{(a.result) ? (a.result.hz).toFixed(2) : (0).toFixed(2)} ops/sec{winWidth>500?("  ±" + ((a.result) ? (a.result.rme).toFixed(2) : (0))):""}</div>
                     <div className="absolute bottom-0 left-0 h-1 w-full"
                         style={{
                             backgroundColor: '#5a5a5a'
@@ -269,55 +290,115 @@ export const Blocks = () => {
     const runTask = async () => {
         if (!isRunninTask) {
             setIsRunningTask(true)
-            const url = (await fetch("./_.js")).url
-            const task = blocks.map((block, index) => {
-                return new Promise(async (resolve, reject) => {
-                    const worker = new Worker(url, { "type": "module" })
+            //////////  javascript  ////////
+            if (lang == "javascript") {
+                const url = (await fetch("./_.js")).url
+                const task = blocks.map((block, index) => {
+                    return new Promise(async (resolve, reject) => {
+                        const worker = new Worker(url)
+                        const update = Array.from(blocks);
+                        update[index].result = null
+                        update[index].task = worker
+                        setBlocks(update)
+                        worker.onmessage = (event) => {
+                            let data = event.data
+                            if (typeof event.data == "string") {
+                                data = JSON.parse(event.data)
+                            }
+                            if (data.error) {
+                                toast.error(`🔥 ${block.name} error`, {
+                                    position: "top-right",
+                                    theme: 'dark',
+                                    hideProgressBar: false,
+                                    closeOnClick: true,
+                                    pauseOnHover: true,
+                                    draggable: true,
+                                    progress: undefined,
+                                });
+                                worker.terminate()
+                                resolve(false)
+                                return
+                            };
+                            const update = Array.from(blocks);
+                            update[index].result = data
+                            setBlocks(update)
+                            if (data.status == "done") {
+                                resolve(true)
+                                worker.terminate()
+                            }
+                        }
+                        await sleep(400)
+                        worker.postMessage(block.value)
+                    })
+                })
+                await Promise.all(task)
+                await sleep(700)
+                setIsRunningTask(false)
+                toast.success(`🌈 benchmarking done`, {
+                    position: "top-right",
+                    theme: 'dark',
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+                return
+            }
+            //////////  python  ////////
+            if (lang == "python") {
+                const url = (await fetch("./vm.py.js")).url
+                const worker = new Worker(url)
+                const update = Array.from(blocks);
+                update[0].result = null
+                update[0].task = worker
+                setBlocks(update)
+                const codes = blocks.map((block, index) => {
                     const update = Array.from(blocks);
                     update[index].result = null
-                    update[index].task = worker
                     setBlocks(update)
-                    worker.onmessage = (event) => {
-                        if (event.data.error) {
-                            toast.error(`🔥 ${block.name} error`, {
-                                position: "top-right",
-                                theme: 'dark',
-                                hideProgressBar: false,
-                                closeOnClick: true,
-                                pauseOnHover: true,
-                                draggable: true,
-                                progress: undefined,
-                            });
-                            worker.terminate()
-                            resolve(false)
-                            return
-                        };
-                        const update = Array.from(blocks);
-                        update[index].result = event.data
-                        setBlocks(update)
-                        if (event.data.status == "done") {
-                            resolve(true)
-                            worker.terminate()
-                        }
-                    }
-                    await sleep(400)
-                    worker.postMessage(block.value)
+                    return [index, block.value]
                 })
-            })
-            await Promise.all(task)
-            await sleep(700)
-            setIsRunningTask(false)
-            toast.success(`🌈 benchmarking done`, {
-                position: "top-right",
-                theme: 'dark',
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
-        }else{
-            blocks.forEach(a=>{
+                worker.onmessage = async (event) => {
+                    let data = event.data
+                    if (typeof event.data == "string") {
+                        data = JSON.parse(event.data)
+                    }
+                    const block = blocks[data.index]
+                    if (data.error) {
+                        toast.error(`🔥 ${block.name} error`, {
+                            position: "top-right",
+                            theme: 'dark',
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                        });
+                        return
+                    };
+                    const update = Array.from(blocks);
+                    update[data.index].result = data
+                    setBlocks(update)
+                    if (data.status == "done" && data.index == blocks.length - 1) {
+                        await sleep(700)
+                        setIsRunningTask(false)
+                        toast.success(`🌈 benchmarking done`, {
+                            position: "top-right",
+                            theme: 'dark',
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                        });
+                        worker.terminate()
+                    }
+                }
+                worker.postMessage({ codes })
+            }
+        } else {
+            blocks.forEach(a => {
                 a.task?.terminate()
             })
             toast.warn(`stoped benchmarking`, {
@@ -332,14 +413,18 @@ export const Blocks = () => {
             setIsRunningTask(false)
         }
     }
+    window.onresize = () =>{
+        setWinWidth(window.innerWidth)
+    }
     return (
         <div className="">
-            <div className="flex items-center">
+            <div className="flex items-center w-full overflow-x-scroll no-bar">
+                <CLang onChange={setLang} />
                 <button className={`button ${(isRunninTask) ? "is-red" : "is-dark"}`} onClick={runTask}>{(!isRunninTask) ? <MdPlayArrow className="w-6 h-6" /> : <MdStop className="w-6 h-6" />}</button>
                 <button className={`button no-bg is-border-dark mx-2 ${(isRunninTask) ? "disable" : ""}`} onClick={addingBlock}>Add Test Case</button>
             </div>
             <div className="lg:flex w-full">
-                <div className="min-h-40 w-full relative mb-20 lg:mb-0 lg:max-w-lg transition-all">
+                <div className="min-h-40 w-full relative mb-16 lg:mb-0 lg:max-w-lg transition-all">
                     <DragDropContext onDragEnd={onDragEnd}>
                         <Droppable droppableId={"1"}>
                             {provided => (
