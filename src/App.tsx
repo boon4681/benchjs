@@ -1,15 +1,19 @@
 import React, { Suspense, useState, useRef, useEffect } from 'react'
 import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
-import Home from './pages/index'
-import _404 from './pages/404'
-
+import loadable from '@loadable/component'
+const Home = loadable(() => import('./pages/index'));
+const P404 = loadable(() => import('./pages/404'))
 function App() {
   return (
     <div>
       <Router>
         <Switch>
-          <Route exact path="/"><Home /></Route>
-          <Route exact path="*"><_404 /></Route>
+          <Route exact path="/">
+            <Home />
+          </Route>
+          <Route exact path="*">
+            <P404 />
+          </Route>
         </Switch>
       </Router>
     </div>

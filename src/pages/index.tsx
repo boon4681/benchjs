@@ -1,5 +1,5 @@
 import React, { useState, ReactComponentElement, useRef, useEffect } from 'react'
-import { Blocks } from '../components/editor';
+import { Blocks } from '../components/Blocks';
 import { Kofi_Panel } from '../components/Donate';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
