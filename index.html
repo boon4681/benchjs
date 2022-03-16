@@ -26,8 +26,12 @@
   <meta name="twitter:image" content="https://benchjs.boon4681.com/images/logo.jpg" />
   <meta name="robots" content="index,follow" />
   <meta name="googlebot" content="index,follow,archive" />
-  <link media="all" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-  <link media="all" href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link media="all"
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+    rel="stylesheet">
+  <link media="all"
+    href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
   <title>Benchjs</title>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-CNWQDWBZPB"></script>
   <script>
@@ -40,21 +44,26 @@
 
 <body>
   <main class="min-h-screen"></main>
+  <div id="wasmnotload"></div>
+  <script type="module" src="/src/main.tsx"></script>
   <script type="text/javascript">
     try {
-      if (!WebAssembly) {}
+      if (!WebAssembly) { }
     } catch (error) {
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function () {
         if (xhr.readyState == XMLHttpRequest.DONE) {
-          document.body.querySelector("main").innerHTML = xhr.responseText;
+          var text = xhr.responseText
+          var parser = new DOMParser();
+          var xmlDoc = parser.parseFromString(text, "text/html");
+          document.head.appendChild(xmlDoc.querySelector("style"))
+          document.body.querySelector("#wasmnotload").innerHTML = xhr.responseText;
         }
       }
       xhr.open('GET', './web.notsupport', true);
       xhr.send(null);
     }
   </script>
-  <script type="module" src="/src/main.tsx"></script>
 </body>
 
 </html>
