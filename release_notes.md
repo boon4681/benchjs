@@ -12,3 +12,6 @@
 * Realease notes preview
 
 ####
+
+# benchjs 1.0.0b
+* caching python worker

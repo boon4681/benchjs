@@ -1,7 +1,8 @@
 importScripts("https://cdn.jsdelivr.net/pyodide/v0.18.1/full/pyodide.js");
+let pyodide
 
 self.onmessage = async ({ data }) => {
-    let pyodide = await loadPyodide({
+    if(!pyodide) pyodide = await loadPyodide({
         indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
     });
     const codes = data.codes.map(a=>{

@@ -10,6 +10,8 @@ import { hsv2rgb } from '../.libs/color'
 import { CLang } from './CLang'
 import {Editor, iblock } from './editor';
 ///////////////////
+const url = (await fetch("./vm.py.js")).url
+const py_worker = new Worker(url)
 
 export const Blocks = () => {
     const [blocks, setBlocks] = useState<iblock[]>([
@@ -192,11 +194,9 @@ export const Blocks = () => {
             }
             //////////  python  ////////
             if (lang == "python") {
-                const url = (await fetch("./vm.py.js")).url
-                const worker = new Worker(url)
                 const update = Array.from(blocks);
                 update[0].result = null
-                update[0].task = worker
+                update[0].task = py_worker
                 setBlocks(update)
                 const codes = blocks.map((block, index) => {
                     const update = Array.from(blocks);
@@ -204,7 +204,7 @@ export const Blocks = () => {
                     setBlocks(update)
                     return [index, block.value]
                 })
-                worker.onmessage = async (event) => {
+                py_worker.onmessage = async (event) => {
                     let data = event.data
                     if (typeof event.data == "string") {
                         data = JSON.parse(event.data)
@@ -237,10 +237,11 @@ export const Blocks = () => {
                             draggable: true,
                             progress: undefined,
                         });
-                        worker.terminate()
+                        // py_worker.terminate()
                     }
                 }
-                worker.postMessage({ codes })
+                await sleep(400)
+                py_worker.postMessage({ codes })
             }
         } else {
             blocks.forEach(a => {
